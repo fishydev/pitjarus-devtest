@@ -130,17 +130,13 @@ export const getTableScore = async (
 
   if (from) {
     filteredReport = filteredReport.filter((report) =>
-      dayjs(report.tanggal, "YYYY-MM-DD").isSameOrAfter(
-        dayjs(from, "YYYY-MM-DD")
-      )
+      dayjs(report.tanggal, "YYYY-MM-DD").isSameOrAfter(dayjs(from))
     );
   }
 
   if (to) {
     filteredReport = filteredReport.filter((report) =>
-      dayjs(report.tanggal, "YYYY-MM-DD").isSameOrBefore(
-        dayjs(to, "YYYY-MM-DD")
-      )
+      dayjs(report.tanggal, "YYYY-MM-DD").isSameOrBefore(dayjs(to))
     );
   }
 
