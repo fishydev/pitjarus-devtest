@@ -123,7 +123,7 @@ onMounted(async () => {
         <tr v-for="data in tableData" :key="data.brand_id">
           <td>{{ data.brand_name }}</td>
           <td v-for="comply in data.compliance" :key="comply.area_id">
-            {{ comply.percentage }}
+            {{ `${comply.percentage}%` }}
           </td>
         </tr>
       </tbody>
