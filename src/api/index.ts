@@ -25,8 +25,8 @@ export const getAreas = async (): Promise<Area[]> => {
 
 export const getBarScore = async (
   areas?: string[],
-  from?: string,
-  to?: string
+  from?: number,
+  to?: number
 ): Promise<BarScore[]> => {
   let allowedStore = storeData;
 
@@ -99,8 +99,8 @@ export const getBarScore = async (
 
 export const getTableScore = async (
   areas?: string[],
-  from?: string,
-  to?: string
+  from?: number,
+  to?: number
 ): Promise<TableScore[]> => {
   let allowedStore = storeData;
 

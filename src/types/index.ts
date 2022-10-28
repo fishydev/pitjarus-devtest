@@ -37,3 +37,9 @@ export type Area = {
   area_id: string;
   area_name: string;
 };
+
+export type FilterQuery = {
+  areas?: string[];
+  from?: number;
+  to?: number;
+};

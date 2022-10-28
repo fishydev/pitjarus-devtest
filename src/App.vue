@@ -2,16 +2,13 @@
 import { onMounted, ref, computed } from "vue";
 import { getAreas, getBarScore, getTableScore } from "./api";
 
+import FilterForm from "./components/FilterForm.vue";
 import BarChart from "./components/barChart";
+import TableComponent from "./components/TableComponent.vue";
 
-import type { Area, BarScore, TableScore } from "./types";
+import type { Area, BarScore, TableScore, FilterQuery } from "./types";
 
 const areaOptions = ref<Area[]>([]);
-const formValue = ref({
-  areas: undefined,
-  fromDate: undefined,
-  toDate: undefined,
-});
 
 const barChartData = ref<BarScore[]>();
 const tableData = ref<TableScore[]>();
@@ -33,101 +30,61 @@ const barValues = computed(() =>
     : []
 );
 
-const tableAreas = computed(() =>
-  tableData.value
-    ? tableData.value[0].compliance.map((comply) => {
+const tableHeads = computed(() => {
+  if (tableData.value) {
+    let heads = ["Label"];
+    heads.push(
+      ...tableData.value[0].compliance.map((comply) => {
         return comply.area_name;
+      })
+    );
+    return heads;
+  } else return [];
+});
+
+const tableRows = computed(() =>
+  tableData.value
+    ? tableData.value.map((data) => {
+        let row = [data.brand_name];
+        row.push(
+          ...data.compliance.map((comply) => {
+            return `${comply.percentage}%`;
+          })
+        );
+
+        return row;
       })
     : []
 );
 
-const dateDisabled = (ts: number) => {
-  return formValue.value.fromDate ? ts <= formValue.value.fromDate : false;
+const filterHandler = (query: FilterQuery) => {
+  filterData(query);
 };
 
-const filterData = async () => {
-  console.log(
-    formValue.value.areas,
-    formValue.value.fromDate,
-    formValue.value.toDate
-  );
+const filterData = async (data: FilterQuery) => {
   barChartDataLoaded.value = false;
-  barChartData.value = await getBarScore(
-    formValue.value.areas,
-    formValue.value.fromDate,
-    formValue.value.toDate
-  );
+  const { areas, from, to } = data;
+  barChartData.value = await getBarScore(areas, from, to);
   barChartDataLoaded.value = true;
 
-  tableData.value = await getTableScore(
-    formValue.value.areas,
-    formValue.value.fromDate,
-    formValue.value.toDate
-  );
+  tableData.value = await getTableScore(areas, from, to);
 };
 
 onMounted(async () => {
   areaOptions.value = await getAreas();
-
-  await filterData();
+  await filterData({ areas: undefined, from: undefined, to: undefined });
 });
 </script>
 
 <template>
   <main>
-    <n-form :model="formValue" inline>
-      <n-form-item class="area-input">
-        <n-select
-          v-model:value="formValue.areas"
-          multiple
-          :options="areaOptions"
-          label-field="area_name"
-          value-field="area_id"
-          path="areas"
-          placeholder="Select Area"
-        />
-      </n-form-item>
-      <n-form-item>
-        <n-date-picker
-          v-model:value="formValue.fromDate"
-          type="date"
-          path="fromDate"
-          placeholder="From Date"
-        />
-      </n-form-item>
-      <n-form-item>
-        <n-date-picker
-          v-model:value="formValue.toDate"
-          type="date"
-          :disabled="!formValue.fromDate"
-          :is-date-disabled="dateDisabled"
-          path="toDate"
-          placeholder="To Date"
-        />
-      </n-form-item>
-      <n-form-item>
-        <n-button @click="filterData">Apply</n-button>
-      </n-form-item>
-    </n-form>
+    <FilterForm @filter-data="filterHandler" />
     <BarChart
       :labels="barLabels"
       :values="barValues"
       v-if="barChartDataLoaded"
     />
-    <n-table class="table-score">
-      <thead>
-        <th>Brand</th>
-        <th v-for="(area, index) in tableAreas" :key="index">{{ area }}</th>
-      </thead>
-      <tbody>
-        <tr v-for="data in tableData" :key="data.brand_id">
-          <td>{{ data.brand_name }}</td>
-          <td v-for="comply in data.compliance" :key="comply.area_id">
-            {{ `${comply.percentage}%` }}
-          </td>
-        </tr>
-      </tbody>
-    </n-table>
+    <TableComponent :heads="tableHeads" :rows="tableRows" />
   </main>
 </template>
 
